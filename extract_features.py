@@ -138,6 +138,7 @@ def run(weight, videos_folder, ext, outroot, inp_channels='rgb'):
             os.makedirs(outdir)
 
         for ind, video in enumerate(videos):
+            name = video.split("/")[-1]
             out_path = os.path.join(outdir, os.path.basename(video[:-4])) + '.pt'
             total += 1
 
