@@ -169,9 +169,9 @@ if __name__ == "__main__":
     #parser = argparse.ArgumentParser()
     #parser.add_argument('--videos_folder', default='', help='videos folder', required=True)
     #parser.add_argument('--videos_extension', default='.mp4', help='videos extension', required=True)
+    #opt = parser.parse_args()
     videos_folder = "videos"
     videos_extension = ".mp4"
-    opt = parser.parse_args()
     weight = 'checkpoints/archive/nslt_2000_065538_0.514762.pt'
     out = './i3d-features'
     run(weight, videos_folder, videos_extension, out, 'rgb')
