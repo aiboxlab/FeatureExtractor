@@ -1,5 +1,5 @@
 import os
-
+import argparse
 import pandas as pd
 import numpy as np
 import torch
@@ -19,9 +19,6 @@ def load_all_rgb_frames_from_video(video, desired_channel_order='rgb'):
     
     frames = []
     faces = []
-    
-    #last_cropped = np.zeros((224,224,3), np.uint8)
-
     while(True):
 
         frame = np.zeros((224,224,3), np.uint8)
@@ -40,7 +37,7 @@ def load_all_rgb_frames_from_video(video, desired_channel_order='rgb'):
 
         except:
             break
-
+            
         '''
         #Face Extractor
         cropped = crop_face(frame.copy())
@@ -92,29 +89,30 @@ def extract_features_fullvideo(model, inp, framespan, stride):
 
 def _extract_features(model, frames):
     inputs = torch.from_numpy(frames)
-
     inputs = inputs.unsqueeze(0)
-
     inputs = inputs.cuda()
     with torch.no_grad():
         ft = model.extract_features(inputs)
     ft = ft.squeeze(-1).squeeze(-1)[0].transpose(0, 1)
-
-    #print("OUTSIDE", ft.size())
-
     ft = ft.cpu()
     return ft
 
 
+def listar_arquivos(caminho_pasta, extensao_arquivo):
+    arquivos = []
+    for pasta_raiz, subpastas, nome_arquivos in os.walk(caminho_pasta):
+        for nome_arquivo in nome_arquivos:
+            if nome_arquivo.endswith(extensao_arquivo):
+                caminho_absoluto = os.path.join(pasta_raiz, nome_arquivo)
+                caminho_absoluto = caminho_absoluto.replace("\\", "/")
+                arquivos.append(caminho_absoluto)
+    return arquivos
 
 
 
-def run(weight, frame_roots, outroot, inp_channels='rgb'):
-    videos = []
-
-    for root in frame_roots:
-        paths = sorted(os.listdir(root))
-        videos.extend([os.path.join(root, path) for path in paths])
+def run(weight, videos_folder, ext, outroot, inp_channels='rgb'):
+    
+    videos = listar_arquivos(videos_folder, ext)
 
     # ===== setup models ======
     i3d = InceptionI3d(400, in_channels=3)
@@ -122,8 +120,6 @@ def run(weight, frame_roots, outroot, inp_channels='rgb'):
     i3d.load_state_dict(torch.load(weight)) # Network's Weight
     i3d.cuda()
     i3d.train(False)  # Set model to evaluate mode
-
-
     # Face model feature extractor
     #fmodel = InceptionI3d(400, in_channels=3)
     #fmodel.replace_logits(2000)
@@ -143,11 +139,7 @@ def run(weight, frame_roots, outroot, inp_channels='rgb'):
 
         for ind, video in enumerate(videos):
             out_path = os.path.join(outdir, os.path.basename(video[:-4])) + '.pt'
-
             total += 1
-
-            # PARA MELHORAR, É RECOMENDADO O USO DE ALGUM BD
-            # PARA GUARDAR QUAIS VÍDEOS JÁ FORAM EXTRAÍDOS.
 
             #if total < 13321:
             #    print("continue")
@@ -163,32 +155,23 @@ def run(weight, frame_roots, outroot, inp_channels='rgb'):
             #    continue
 
             frames, face_frames = load_all_rgb_frames_from_video(video, inp_channels)
-            
             features = extract_features_fullvideo(i3d, frames, framespan, stride)
             #face_features = extract_features_fullvideo(fmodel, face_frames, framespan, stride)
-
             #CONCATENADO
             #for i in range(len(face_features)):
             #    features.append(face_features[i])
 
             print(ind, video, len(features))
-
             torch.save(features, os.path.join(outdir, os.path.basename(video[:-4])) + '.pt')
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--videos_folder', default='', help='videos folder', required=True)
+    parser.add_argument('--videos_extension', default='.mp4', help='videos extension', required=True)
+    opt = parser.parse_args()
     weight = 'checkpoints/archive/nslt_2000_065538_0.514762.pt'
-
-    # ======= Extract Features for PHEOENIX-2014-T ========
-    videos_roots = [
-        #'../videos/train',
-        #'../videos/valid',
-        #'../videos/test'
-        '../cesarld_compressed'
-    ]
-
-    out = '../i3d-features'
-
-    run(weight, videos_roots, out, 'rgb')
+    out = './i3d-features'
+    run(weight, opt.videos_folder, opt.videos_extension, out, 'rgb')
 
 # ===== Métodos não utilizados abaixo ===== #
