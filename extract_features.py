@@ -139,7 +139,7 @@ def run(weight, videos_folder, ext, outroot, inp_channels='rgb'):
 
         for ind, video in enumerate(videos):
             name = video.split("/")[-1]
-            out_path = os.path.join(outdir, os.path.basename(video[:-4])) + '.pt'
+            out_path = os.path.join(outdir, os.path.basename(name[:-4])) + '.pt'
             total += 1
 
             #if total < 13321:
@@ -162,8 +162,8 @@ def run(weight, videos_folder, ext, outroot, inp_channels='rgb'):
             #for i in range(len(face_features)):
             #    features.append(face_features[i])
 
-            print(ind, video, len(features))
-            torch.save(features, os.path.join(outdir, os.path.basename(video[:-4])) + '.pt')
+            print(ind, name, len(features))
+            torch.save(features, os.path.join(outdir, os.path.basename(name[:-4])) + '.pt')
 
 
 if __name__ == "__main__":
