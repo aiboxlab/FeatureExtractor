@@ -130,7 +130,7 @@ def run(weight, videos_folder, ext, outroot, inp_channels='rgb'):
     print('feature extraction starts.')
 
     # ===== extract features ======
-    for framespan, stride in [(16, 2), (12, 2), (8, 2)]:
+    for framespan, stride in [(64, 2), (32, 2), (16, 2)]:
 
         outdir = os.path.join(outroot, 'span={}_stride={}'.format(framespan, stride))
 
